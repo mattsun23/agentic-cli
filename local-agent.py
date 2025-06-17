@@ -412,7 +412,7 @@ if __name__ == "__main__":
 
         # if the user types exit, he can leave the chat interface 
         if user_input.lower() == "exit":
-            print("See you later! Come back again when you want to get serious!")
+            print("See you later! Come back again!")
             main_app_loop = False 
         else:
             # Clear scratchpad for new conversation
