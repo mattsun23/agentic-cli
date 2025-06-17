@@ -3,8 +3,6 @@ import sys
 
 # import ai library 
 
-# import api key 
-
 OLLAMA_BASE_URL = "http://localhost:11434"
 DEFAULT_MODEL = "granite3.3:8b"  # You can change this to your preferred model
 
@@ -263,7 +261,6 @@ class AgentScratchpad:
 
 
 # The parser will always look at how the final answer is being produced. We are essentially creating completions. 
-
 
 def agent_parser(user_input, scratchpad):
     """Parse user input and determine next action using scratchpad context (Ollama version)"""
