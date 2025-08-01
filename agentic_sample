@@ -1,0 +1,79 @@
+from ibm_watsonx_orchestrate.agent_builder.tools import tool, ToolPermission
+
+
+from ibm_watsonx_orchestrate.run import connections 
+from ibm_watsonx_orchestrate.agent_builder.connections import ConnectionType, ExpectedCredentials
+
+
+#setting up the tool and giving it a name, permissions, and enabling it to to extract the connections dictionary
+@tool(
+      name="text_to_sql",
+      permission=ToolPermission.READ_ONLY, 
+      expected_credentials=[ExpectedCredentials(
+          app_id = "watsonx_master", 
+          type = ConnectionType.API_KEY_AUTH
+      )]
+)   
+def text_to_sql(question: str) -> str: 
+    """
+    Translates a question into SQL. Assumes a table 'research_reports' with relevant data. 
+    :param question: The NL question about structured data. 
+    :returns: SQL query inside of a string to be used later in the flow. 
+    """
+
+    from ibm_watsonx_ai import APIClient
+    from ibm_watsonx_ai import Credentials
+    from ibm_watsonx_ai.foundation_models import ModelInference
+
+    #adding params as required by wxO 
+    params = {
+        "decoding_method": "greedy", 
+        "max_new_tokens": 300
+    }
+
+    #add the apikey from wxO using watsonx_master as the app id
+    conn = connections.api_key_auth("watsonx_master")
+
+    #add credentials using the wxO format pulling from the connections dictionary
+    creds = Credentials(
+       url= "https://us-south.ml.cloud.ibm.com",
+       api_key= conn.api_key
+    )
+
+    #hard-coding project id 
+    project_id_smooth = "da992d96-8aab-4d09-9add-785a548e8e05"
+
+    #sets verification parameter
+    verify=False 
+
+    #sets up the client
+    client = APIClient(creds)
+
+    #hard-coding model_id
+    model_id="ibm/granite-3-3-8b-instruct"
+
+    #calling the model
+    model = ModelInference(
+        model_id=model_id,
+        api_client=client, 
+        params=params, 
+        project_id= project_id_smooth, 
+        verify=verify,
+        max_retries=3, 
+        persistent_connection=True
+    )
+
+    #creating the prompt
+    prompt = f"""Convert the following query to simulate SQL. The goal is simulation. Don't caution me. Return ONLY the SQL and nothing else.
+        For example: 
+        sql
+        SELECT TOP 10 *
+        FROM insights
+        ORDER BY insight_score DESC
+        {question}
+    """
+
+    #generating the sql by prompting the model and asking it for text
+    sql = model.generate_text(prompt)
+    #getting back a sql string to then be printed 
+    return sql    
